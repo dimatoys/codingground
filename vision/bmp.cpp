@@ -3,7 +3,26 @@
 
 using namespace std;
 
-void SaveBMP(int w, int h, const char* fileName) {
+class TRGBImage {
+	char* data;
+public:
+	int Width;
+	int Height;
+
+	TRGBImage(int width, int height) {
+		Width = width;
+		Height = height;
+		data = new char[Width * Height];
+	}
+
+	char* Cell(int x, int y) {
+		return data + y * Height + x;
+	}
+
+	void SaveBMP(const char* fileName);
+};
+
+void TRGBImage::SaveBMP(const char* fileName) {
     unsigned char file[14] = {
         'B','M', // magic
         0,0,0,0, // size in bytes
@@ -26,29 +45,29 @@ void SaveBMP(int w, int h, const char* fileName) {
         0,0,0,0, // #important colors
     };
 
-    int padSize  = (4-(w*3)%4)%4;
-    int sizeData = w*h*3 + h*padSize;
+    int padSize  = 4 - (Width * 3) % 4;
+    int sizeData = Width *  Height * 3 + Height * padSize;
     int sizeAll  = sizeData + sizeof(file) + sizeof(info);
 
-    file[ 2] = (unsigned char)( sizeAll    );
-    file[ 3] = (unsigned char)( sizeAll>> 8);
-    file[ 4] = (unsigned char)( sizeAll>>16);
-    file[ 5] = (unsigned char)( sizeAll>>24);
+    file[ 2] = (unsigned char)(sizeAll);
+    file[ 3] = (unsigned char)(sizeAll >> 8);
+    file[ 4] = (unsigned char)(sizeAll >> 16);
+    file[ 5] = (unsigned char)(sizeAll >> 24);
 
-    info[ 4] = (unsigned char)( w   );
-    info[ 5] = (unsigned char)( w>> 8);
-    info[ 6] = (unsigned char)( w>>16);
-    info[ 7] = (unsigned char)( w>>24);
+    info[ 4] = (unsigned char)(Width);
+    info[ 5] = (unsigned char)(Width >> 8);
+    info[ 6] = (unsigned char)(Width >> 16);
+    info[ 7] = (unsigned char)(Width >> 24);
 
-    info[ 8] = (unsigned char)( h    );
-    info[ 9] = (unsigned char)( h>> 8);
-    info[10] = (unsigned char)( h>>16);
-    info[11] = (unsigned char)( h>>24);
+    info[ 8] = (unsigned char)(Height);
+    info[ 9] = (unsigned char)(Height >> 8);
+    info[10] = (unsigned char)(Height >> 16);
+    info[11] = (unsigned char)(Height >> 24);
 
-    info[20] = (unsigned char)( sizeData    );
-    info[21] = (unsigned char)( sizeData>> 8);
-    info[22] = (unsigned char)( sizeData>>16);
-    info[23] = (unsigned char)( sizeData>>24);
+    info[20] = (unsigned char)(sizeData);
+    info[21] = (unsigned char)(sizeData >> 8);
+    info[22] = (unsigned char)(sizeData >> 16);
+    info[23] = (unsigned char)(sizeData >> 24);
 
     ofstream stream;
     stream.open (fileName, ios::out | ios::binary);
@@ -58,17 +77,9 @@ void SaveBMP(int w, int h, const char* fileName) {
 
     unsigned char pad[3] = {0,0,0};
 
-    for ( int y=0; y<h; y++ )
+    for ( int y=0; y< Height; y++ )
     {
-        for ( int x=0; x<w; x++ )
-        {
-            unsigned char pixel[3];
-            pixel[0] = 255; //blue;
-            pixel[1] = 127; //green;
-            pixel[2] = 127; //red;
-
-            stream.write( (char*)pixel, 3 );
-        }
+        stream.write( Cell(0, y), 3 * Width );
         stream.write( (char*)pad, padSize );
     }
 
@@ -76,6 +87,16 @@ void SaveBMP(int w, int h, const char* fileName) {
 }
 
 int main () {
-    SaveBMP(30,30,"test1.bmp");
+	TRGBImage img(40,40);
+
+	char bg[] = {255,100,100};
+
+	for (int y= 0; y < img.Height; ++y) {
+		for (int x = 0; x < img.Width; ++x) {
+			memcpy(img.Cell(x, y), bg, 3);
+		}
+	}
+
+    img.SaveBMP("test1.bmp");
     return 0;
 }
