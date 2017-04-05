@@ -16,7 +16,7 @@ public:
 	}
 
 	char* Cell(int x, int y) {
-		return data + y * Height + x;
+		return data + y * Width + x;
 	}
 
 	void SaveBMP(const char* fileName);
@@ -87,9 +87,9 @@ void TRGBImage::SaveBMP(const char* fileName) {
 }
 
 int main () {
-	TRGBImage img(40,40);
+	TRGBImage img(32,32);
 
-	char bg[] = {255,100,100};
+	unsigned char bg[] = {0, 0, 0};
 
 	for (int y= 0; y < img.Height; ++y) {
 		for (int x = 0; x < img.Width; ++x) {
