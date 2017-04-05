@@ -1,26 +1,23 @@
 #include <iostream>
 #include <fstream>
 
+#include "string.h"
+#include "bmp.h"
+
 using namespace std;
 
-class TRGBImage {
-	char* data;
-public:
-	int Width;
-	int Height;
+void dumpBin(void* ptr, int size) {
+    for (int i = 0; i < size; ++i) {
+    	if (i % 16 == 0) {
+    		printf("\n%04X ", i);
+    	}
+    	printf(" %02X", (unsigned int)*(((unsigned char*)ptr) + i));
+    }
+}
 
-	TRGBImage(int width, int height) {
-		Width = width;
-		Height = height;
-		data = new char[Width * Height];
-	}
-
-	char* Cell(int x, int y) {
-		return data + y * Width + x;
-	}
-
-	void SaveBMP(const char* fileName);
-};
+void TRGBImage::DrawPixel(int x, int y, void* color) {
+	memcpy(Cell(x, y), color, Depth);
+}
 
 void TRGBImage::SaveBMP(const char* fileName) {
     unsigned char file[14] = {
@@ -45,7 +42,7 @@ void TRGBImage::SaveBMP(const char* fileName) {
         0,0,0,0, // #important colors
     };
 
-    int padSize  = 4 - (Width * 3) % 4;
+    int padSize  = (4 - (Width * 3) % 4) % 4;
     int sizeData = Width *  Height * 3 + Height * padSize;
     int sizeAll  = sizeData + sizeof(file) + sizeof(info);
 
@@ -73,30 +70,17 @@ void TRGBImage::SaveBMP(const char* fileName) {
     stream.open (fileName, ios::out | ios::binary);
 
     stream.write( (char*)file, sizeof(file) );
+
+
     stream.write( (char*)info, sizeof(info) );
 
     unsigned char pad[3] = {0,0,0};
 
     for ( int y=0; y< Height; y++ )
     {
-        stream.write( Cell(0, y), 3 * Width );
+        stream.write( (char*)Cell(0, y), Depth * Width );
         stream.write( (char*)pad, padSize );
     }
 
     stream.close();
-}
-
-int main () {
-	TRGBImage img(32,32);
-
-	unsigned char bg[] = {0, 0, 0};
-
-	for (int y= 0; y < img.Height; ++y) {
-		for (int x = 0; x < img.Width; ++x) {
-			memcpy(img.Cell(x, y), bg, 3);
-		}
-	}
-
-    img.SaveBMP("test1.bmp");
-    return 0;
 }
