@@ -19,6 +19,17 @@ void TRGBImage::DrawPixel(int x, int y, void* color) {
 	memcpy(Cell(x, y), color, Depth);
 }
 
+void TRGBImage::DrawRect(int startx, int starty, int width, int height, void* color) {
+	int endx = startx + width;
+	int endy = starty + height;
+	for (int y = starty; y < endy; ++y) {
+		for (int x = startx; x < endx; ++x) {
+			DrawPixel(x, y, color);
+		}
+	}
+}
+
+
 void TRGBImage::SaveBMP(const char* fileName) {
     unsigned char file[14] = {
         'B','M', // magic

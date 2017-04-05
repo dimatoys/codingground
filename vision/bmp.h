@@ -22,6 +22,7 @@ public:
 	}
 
 	void DrawPixel(int x, int y, void* color);
+	void DrawRect(int startx, int starty, int width, int height, void* color);
 
 	void SaveBMP(const char* fileName);
 
