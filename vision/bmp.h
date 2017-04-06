@@ -3,6 +3,8 @@
 
 void dumpBin(void* ptr, int size);
 
+typedef const unsigned char TColor[3];
+
 class TRGBImage {
 	unsigned char* data;
 public:
@@ -21,8 +23,8 @@ public:
 		return data + (y * Width + x) * Depth;
 	}
 
-	void DrawPixel(int x, int y, void* color);
-	void DrawRect(int startx, int starty, int width, int height, void* color);
+	void DrawPixel(int x, int y, TColor& color);
+	void DrawRect(int startx, int starty, int width, int height, TColor& color);
 
 	void SaveBMP(const char* fileName);
 

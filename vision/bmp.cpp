@@ -15,11 +15,11 @@ void dumpBin(void* ptr, int size) {
     }
 }
 
-void TRGBImage::DrawPixel(int x, int y, void* color) {
-	memcpy(Cell(x, y), color, Depth);
+void TRGBImage::DrawPixel(int x, int y, TColor& color) {
+	memcpy(Cell(x, y), &color, Depth);
 }
 
-void TRGBImage::DrawRect(int startx, int starty, int width, int height, void* color) {
+void TRGBImage::DrawRect(int startx, int starty, int width, int height, TColor& color) {
 	int endx = startx + width;
 	int endy = starty + height;
 	for (int y = starty; y < endy; ++y) {

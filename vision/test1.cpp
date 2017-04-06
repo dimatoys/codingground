@@ -3,7 +3,7 @@
 int main () {
 	TRGBImage img(32, 32);
 
-	unsigned char bg[] = {127, 255, 255};
+	TColor bg = {127, 255, 255};
 
 	img.DrawRect(0, 0, img.Width, img.Height, bg);
 

@@ -2,6 +2,7 @@
 .project
 .settings
 
-.o
-.run
+*.o
+*.run
+*.bmp
 
