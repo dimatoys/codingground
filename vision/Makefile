@@ -1,9 +1,9 @@
-DEFAULT_RUN = test2
+DEFAULT_RUN = test4
 
 CC = g++
-CFLAGS = 
-INCLUDES = bmp.h camera.h
-OBJS = bmp.o camera.o
+CFLAGS='-std=c++14'
+INCLUDES = bmp.h camera.h utils.h extractor.h
+OBJS = bmp.o camera.o utils.o extractor.o
 
 all: run
 
@@ -17,4 +17,4 @@ run: $(DEFAULT_RUN).run
 	$(CC) -o $@ $^
 
 clean:
-	rm *.o *.bmp *.run
+	rm *.o *.run

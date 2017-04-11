@@ -1,34 +1,58 @@
 #include <iostream>
 #include <fstream>
 
-#include "string.h"
 #include "bmp.h"
 
 using namespace std;
 
-void dumpBin(void* ptr, int size) {
-    for (int i = 0; i < size; ++i) {
-    	if (i % 16 == 0) {
-    		printf("\n%04X ", i);
-    	}
-    	printf(" %02X", (unsigned int)*(((unsigned char*)ptr) + i));
-    }
-}
+#define TO_UINT(a, i) (((((((unsigned int)a[i+3] & 0xFF) << 8) + ((unsigned int)a[i+2] & 0xFF)) << 8) + ((unsigned int)a[i+1] & 0xFF)) << 8) + ((unsigned int)a[i] & 0xFF)
+#define TO_USHORT(a, i) (((unsigned short)a[i+1] & 0xFF) << 8) + ((unsigned short)a[i] & 0xFF)
 
-void TRGBImage::DrawPixel(int x, int y, TColor& color) {
-	memcpy(Cell(x, y), &color, Depth);
-}
+TRGBImage::TRGBImage(const char* bmpfile) {
 
-void TRGBImage::DrawRect(int startx, int starty, int width, int height, TColor& color) {
-	int endx = startx + width;
-	int endy = starty + height;
-	for (int y = starty; y < endy; ++y) {
-		for (int x = startx; x < endx; ++x) {
-			DrawPixel(x, y, color);
-		}
-	}
-}
+	  Data = NULL;
 
+	  ifstream file (bmpfile, ios::in|ios::binary|ios::ate);
+
+	  if (file.is_open()) {
+		streampos size = file.tellg();
+	    file.seekg (0, ios::beg);
+
+	    char* memblock = new char [size];
+	    file.read (memblock, size);
+	    file.close();
+
+	    //dumpBin(memblock, 54);
+
+	    if (memblock[0] == 'B' && memblock[1] == 'M') {
+
+	    	unsigned short planes = TO_USHORT(memblock, 26);
+	    	unsigned short bits = TO_USHORT(memblock, 28);
+	    	unsigned int compression = TO_UINT(memblock, 30);
+
+	    	if ((planes == 1) && (bits == 24) && (compression == 0)) {
+    			Depth = 3;
+    	    	Width = TO_UINT(memblock, 18);
+    	    	Height = TO_UINT(memblock, 22);
+    			Data = new unsigned char[Width * Height * Depth];
+    	    	unsigned int start = TO_UINT(memblock, 10);
+    	    	unsigned int step = (Width + (4 - (Width * 3) % 4) % 4) * Depth;
+    	    	cout << " start=" << start << " w=" << Width << " h=" << Height << std::endl;
+    	    	for (unsigned int y = 0; y < Height; ++y) {
+	    			memcpy(Cell(0, y), memblock + start + y * step, Width * Depth);
+	    		}
+	    	} else {
+		    	cout << " Not supported: planes=" << planes << " bits=" << bits << " compression=" << compression << std::endl;
+	    	}
+	    } else {
+	    	cout << "File is not BMP:" << (char)memblock[0] << (char)memblock[1] << std::endl;
+	    }
+
+	    delete[] memblock;
+	  } else {
+		  cout << "Cannot open " << bmpfile << std::endl;
+	  }
+}
 
 void TRGBImage::SaveBMP(const char* fileName) {
     unsigned char file[14] = {

@@ -35,10 +35,12 @@ public:
 		Z = z;
 		AX = ax;
 		AY = ay;
-		S = s;
+		SetS(s);
 		AreaX = areax;
 		AreaY = areay;
 	}
+
+	void SetS(double s);
 
 	void GetCameraPixel(double x, double y, double z, double& cx, double& cy);
 	void GetCameraAngles(double x, double y, double z, double& ax, double& ay);

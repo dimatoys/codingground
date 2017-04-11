@@ -29,7 +29,7 @@ public:
 		  double camareax,
 		  double camareay) :
 		Image(width, height),
-		Camera(camx, camy, camz, camax,camay, cams, camareax, camareay) {
+		Camera(camx, camy, camz, camax, camay, cams, camareax, camareay) {
 
 		Image.DrawRect(0, 0, Image.Width, Image.Height, bgcolor);
 	}
@@ -51,11 +51,14 @@ public:
 		for (double y = 0.0; y <= 90.0; y += 10.0) {
 			for (double x = 0.0; x < 1000.0; x += 2.5) {
 				if (Draw3D(x, y, 0, color)) {
-					//Draw3D(-x, y, 0);
-					//Draw3D(x, -y, 0);
-					//Draw3D(-x, -y, 0);
+					Draw3D(-x, y, 0, color);
+					Draw3D(x, -y, 0, color);
+					Draw3D(-x, -y, 0, color);
 
-					//Draw3D(y, x, 0);
+					Draw3D(y, x, 0, color);
+					Draw3D(-y, x, 0, color);
+					Draw3D(y, -x, 0, color);
+					Draw3D(-y, -x, 0, color);
 				} else {
 					printf("out: (%f,%f)\n", x, y);
 					break;
@@ -65,7 +68,11 @@ public:
 	}
 
 	void PosTest() {
-
+		double ax, ay, cx, cy;
+		double pos = 1000.0;
+		Camera.GetCameraAngles(pos, 0, 0, ax, ay);
+		Camera.GetCameraPixel(pos, 0, 0, cx, cy);
+		printf("ax=%f (%f)\n cx=%f\n", ax * 180.0 / M_PI, ax / (M_PI / 2.0) , cx);
 	}
 
 	void Save(const char* fileName) {
@@ -78,12 +85,15 @@ int main () {
 	TColor bgcolor = {200, 200, 200};
 	TColor fgcolor = {0, 0, 0};
 
-	Test2 test2(600, 600, bgcolor, 0, 0, 50, 0, 0, 0, M_PI * 0.9, M_PI * 0.5);
+	Test2 test2(600, 600, bgcolor,
+			    100, 0, 50,
+				M_PI * 0.25, 0, M_PI / 5,
+				M_PI * 0.9, M_PI * 0.9);
 
-	//test2.DrawNet(fgcolor);
-	//test2.Save("test2.bmp");
+	test2.DrawNet(fgcolor);
+	test2.Save("test2.bmp");
 
-	test2.PosTest();
+	//test2.PosTest();
 
     return 0;
 }
