@@ -8,6 +8,7 @@
 #ifndef EXTRACTOR_H_
 #define EXTRACTOR_H_
 
+#include "bmp.h"
 #include "utils.h"
 
 #include <math.h>
@@ -31,6 +32,8 @@ struct TDistance {
 	}
 };
 
+typedef double TDColor[3];
+
 struct TVector2D {
 	double X;
 	double Y;
@@ -39,9 +42,13 @@ struct TVector2D {
 typedef TVector2D TGradientColor[3];
 
 class TProduction {
-	std::vector<TDistance> Matrix;
+	const static int SmoothingMatixSize = 10;
+
+	double SmoothingMatrix[SmoothingMatixSize][SmoothingMatixSize];
 public:
-	void SetR(double r);
+	void CountSmoothingMatrix(double s);
+	void Smoothing(TImage<TColor>& src, TImage<TDColor>& dst, int k);
+	void ToRGB(TImage<TDColor>& img, TRGBImage& rgb);
 
 	void CountProduction(TImage<TColor>& src, TImage<TGradientColor>& dst);
 };

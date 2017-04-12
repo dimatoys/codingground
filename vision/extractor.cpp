@@ -7,37 +7,73 @@
 
 #include "extractor.h"
 
-void TProduction::SetR(double r) {
-	TDistance distance1(1, 0);
-	Matrix.push_back(distance1);
+#include <stdio.h>
 
-	TDistance distance2(1, 1);
-	Matrix.push_back(distance2);
+void TProduction::CountSmoothingMatrix(double s) {
 
+	double d = s * s * 2.0;
+	for (int i = 1; i < SmoothingMatixSize; i++) {
+		for (int j = 0; j <= i; j++) {
+			SmoothingMatrix[i][j] = exp(-(i * i + j * j) / d);
+			SmoothingMatrix[j][i] = SmoothingMatrix[i][j];
+		}
+	}
+/*
+	for (int i = 0; i < SmoothingMatixSize; i++) {
+		for (int j = 0; j < SmoothingMatixSize; j++) {
+			printf(" %5.2f", SmoothingMatrix[i][j]);
+		}
+		printf("\n");
+	}
+*/
 }
 
-void TProduction::CountProduction(TImage<TColor>& src, TImage<TGradientColor>& dst) {
-
-	for (unsigned int y = 1; y < src.Height - 1; ++y) {
-		for (unsigned int x = 1; x < src.Width - 1; ++x) {
-			TVector2D* vector = &(*dst.Cell(x, y)[0]);
-			for (unsigned int i = 0; i < sizeof(TColor); ++i) {
-				double dx = 0;
-				double dy = 0;
-
-				for (std::vector<TDistance>::const_iterator it = Matrix.begin(); it != Matrix.end(); ++it) {
-
+void TProduction::Smoothing(TImage<TColor>& src, TImage<TDColor>& dst, int k) {
+	for (unsigned int y = k; y < src.Height - k; ++y) {
+		for (unsigned int x = k; x < src.Width - k; ++x) {
+			for (int p = 0; p < sizeof(TColor); ++p) {
+				double v = (*src.Cell(x, y))[p];
+				for (int i = 1; i <= k; i++) {
+					for (int j = 0; j <= k; j++) {
+						v += (*src.Cell(x + j, y + i))[p] * SmoothingMatrix[i][j];
+						v += (*src.Cell(x + j, y - i))[p] * SmoothingMatrix[i][j];
+						v += (*src.Cell(x - j, y + i))[p] * SmoothingMatrix[i][j];
+						v += (*src.Cell(x - j, y - i))[p] * SmoothingMatrix[i][j];
+					}
 				}
-
-				//dx += (src.Cell(x + distance.A, y + distance.B)[i] - src.Cell(x - distance.A, y - distance.B)[i]) / distance.D;
-				//dy += (src.Cell(x, y + 1)[i] -src.Cell(x, y - 1)[i]) / 2.0;
-
-				vector->X = dx;
-				vector->Y = dy;
-				++vector;
+				(*dst.Cell(x, y))[p] = v;
 			}
 		}
 	}
+}
+
+void TProduction::ToRGB(TImage<TDColor>& img, TRGBImage& rgb) {
+	double min = 1e20;
+	double max = -1;
+	for (unsigned int y = 0; y < img.Height; ++y) {
+		for (unsigned int x = 0; x < img.Width; ++x) {
+			for (int p = 0; p < sizeof(TColor); ++p) {
+				double v = (*img.Cell(x, y))[p];
+				if (v > max) {
+					max = v;
+				}
+				if (v < min) {
+					min = v;
+				}
+			}
+		}
+	}
+	for (unsigned int y = 0; y < img.Height; ++y) {
+		for (unsigned int x = 0; x < img.Width; ++x) {
+			for (int p = 0; p < sizeof(TColor); ++p) {
+				double v = (*img.Cell(x, y))[p];
+				(*rgb.Cell(x, y))[p] = (unsigned char) (0xFF * (v - min) / (max - min));
+			}
+		}
+	}
+}
+
+void TProduction::CountProduction(TImage<TColor>& src, TImage<TGradientColor>& dst) {
 }
 
 

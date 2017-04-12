@@ -13,11 +13,14 @@
 int main() {
 
 	TRGBImage src("bridge.bmp");
-	TImage<TGradientColor> dst(src.Width, src.Height);
+	TImage<TDColor> dst(src.Width, src.Height);
+	TRGBImage rgb(src.Width, src.Height);
 
 	TProduction prod;
-	prod.SetR(2);
-	prod.CountProduction(src, dst);
+	prod.CountSmoothingMatrix(1.4);
+	prod.Smoothing(src, dst, 3);
+	prod.ToRGB(dst, rgb);
+	rgb.SaveBMP("bridge3.bmp");
 
 	return 0;
 }
