@@ -36,12 +36,14 @@ struct TVector2D {
 	double Y;
 };
 
+typedef TVector2D TGradientColor[3];
+
 class TProduction {
 	std::vector<TDistance> Matrix;
 public:
 	void SetR(double r);
 
-	void CountProduction(TImage<TColor>& src, TImage<TVector2D>& dst);
+	void CountProduction(TImage<TColor>& src, TImage<TGradientColor>& dst);
 };
 
 

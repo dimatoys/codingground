@@ -16,11 +16,11 @@ void TProduction::SetR(double r) {
 
 }
 
-void TProduction::CountProduction(TImage<TColor>& src, TImage<TVector2D>& dst) {
+void TProduction::CountProduction(TImage<TColor>& src, TImage<TGradientColor>& dst) {
 
 	for (unsigned int y = 1; y < src.Height - 1; ++y) {
 		for (unsigned int x = 1; x < src.Width - 1; ++x) {
-			TVector2D* vector = dst.Cell(x, y);
+			TVector2D* vector = &(*dst.Cell(x, y)[0]);
 			for (unsigned int i = 0; i < sizeof(TColor); ++i) {
 				double dx = 0;
 				double dy = 0;

@@ -13,7 +13,7 @@
 int main() {
 
 	TRGBImage src("bridge.bmp");
-	TImage<TVector2D> dst(src.Width, src.Height);
+	TImage<TGradientColor> dst(src.Width, src.Height);
 
 	TProduction prod;
 	prod.SetR(2);
