@@ -1,4 +1,4 @@
-DEFAULT_RUN = test4
+DEFAULT_RUN = test3
 
 CC = g++
 CFLAGS='-std=c++14'

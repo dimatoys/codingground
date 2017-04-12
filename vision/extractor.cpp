@@ -16,13 +16,12 @@ void TProduction::SetR(double r) {
 
 }
 
-void TProduction::CountProduction(TImage<unsigned char> src, TImage<double> dst) {
-
+void TProduction::CountProduction(TImage<TColor>& src, TImage<TVector2D>& dst) {
 
 	for (unsigned int y = 1; y < src.Height - 1; ++y) {
 		for (unsigned int x = 1; x < src.Width - 1; ++x) {
-			double* cell = dst.Cell(x, y);
-			for (unsigned int i = 0; i < src.Depth; ++i) {
+			TVector2D* vector = dst.Cell(x, y);
+			for (unsigned int i = 0; i < sizeof(TColor); ++i) {
 				double dx = 0;
 				double dy = 0;
 
@@ -33,8 +32,9 @@ void TProduction::CountProduction(TImage<unsigned char> src, TImage<double> dst)
 				//dx += (src.Cell(x + distance.A, y + distance.B)[i] - src.Cell(x - distance.A, y - distance.B)[i]) / distance.D;
 				//dy += (src.Cell(x, y + 1)[i] -src.Cell(x, y - 1)[i]) / 2.0;
 
-				//cell[2 * i] = dx;
-				//cell[2 * i + 1] = dy;
+				vector->X = dx;
+				vector->Y = dy;
+				++vector;
 			}
 		}
 	}

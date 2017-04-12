@@ -3,13 +3,11 @@
 
 #include "utils.h"
 
-typedef const unsigned char TColor[3];
-
-class TRGBImage : public TImage<unsigned char> {
+class TRGBImage : public TImage<TColor> {
 public:
 
 	TRGBImage(int width, int height) :
-		TImage(width, height, 3) {}
+		TImage(width, height) {}
 
 	TRGBImage(const char* bmpfile);
 

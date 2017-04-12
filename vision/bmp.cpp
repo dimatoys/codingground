@@ -5,8 +5,50 @@
 
 using namespace std;
 
-#define TO_UINT(a, i) (((((((unsigned int)a[i+3] & 0xFF) << 8) + ((unsigned int)a[i+2] & 0xFF)) << 8) + ((unsigned int)a[i+1] & 0xFF)) << 8) + ((unsigned int)a[i] & 0xFF)
-#define TO_USHORT(a, i) (((unsigned short)a[i+1] & 0xFF) << 8) + ((unsigned short)a[i] & 0xFF)
+#define BF_TYPE 0x4D42             /* "BM" */
+
+#pragma pack(1)
+struct BITMAPHEADER {
+	unsigned short bfType;           /* The file type; must be BM. */
+	unsigned int   bfSize;           /* The size, in bytes, of the bitmap file */
+	unsigned short bfReserved1;      /* Reserved; must be zero. */
+	unsigned short bfReserved2;      /* Reserved; must be zero. */
+	unsigned int   bfOffBits;        /* The offset, in bytes, from the beginning of the BITMAPFILEHEADER */
+    unsigned int   biSize;           /* The number of bytes required by the structure. */
+    int            biWidth;          /* The width of the bitmap, in pixels. */
+    int            biHeight;         /* The height of the bitmap, in pixels.
+                                        If biHeight is positive, the bitmap is a bottom-up DIB and its origin is the
+                                        lower-left corner.
+                                        If biHeight is negative, the bitmap is a top-down DIB and its origin is the
+                                        upper-left corner. */
+    unsigned short biPlanes;         /* The number of planes for the target device. This value must be set to 1. */
+    unsigned short biBitCount;       /* The number of bits per pixel */
+    unsigned int   biCompression;    /* The type of compression for a compressed bottom-up bitmap */
+    unsigned int   biSizeImage;      /* The size, in bytes, of the image. This may be set to zero for BI_RGB bitmaps. */
+    int            biXPelsPerMeter;  /* The horizontal resolution, in pixels-per-meter, of the target device for the bitmap */
+    int            biYPelsPerMeter;  /* The vertical resolution, in pixels-per-meter, of the target device for the bitmap. */
+    unsigned int   biClrUsed;        /* The number of color indexes in the color table that are actually used by the bitmap.  */
+    unsigned int   biClrImportant;   /* The number of color indexes that are required for displaying the bitmap. */
+} __attribute__((packed));
+
+/*
+ * Constants for the biCompression field...
+ */
+
+#define BI_RGB       0             /* An uncompressed format. */
+#define BI_RLE8      1             /* A run-length encoded (RLE) format for bitmaps with 8 bpp.
+                                      The compression format is a 2-byte format consisting of a count
+                                      byte followed by a byte containing a color index. */
+#define BI_RLE4      2             /* An RLE format for bitmaps with 4 bpp.
+                                      The compression format is a 2-byte format consisting of a count
+                                      byte followed by two word-length color indexes */
+#define BI_BITFIELDS 3             /* Specifies that the bitmap is not compressed and that the color
+                                      table consists of three DWORD color masks that specify the red,
+                                      green, and blue components, respectively, of each pixel.
+                                      This is valid when used with 16- and 32-bpp bitmaps. */
+
+#define BI_JPEG      4             /* Indicates that the image is a JPEG image */
+#define BI_PNG       5             /* Indicates that the image is a PNG image. */
 
 TRGBImage::TRGBImage(const char* bmpfile) {
 
@@ -26,21 +68,26 @@ TRGBImage::TRGBImage(const char* bmpfile) {
 
 	    if (memblock[0] == 'B' && memblock[1] == 'M') {
 
-	    	unsigned short planes = TO_USHORT(memblock, 26);
-	    	unsigned short bits = TO_USHORT(memblock, 28);
-	    	unsigned int compression = TO_UINT(memblock, 30);
+	    	unsigned short planes = ((BITMAPHEADER*)memblock)->biPlanes;
+	    	unsigned short bits = ((BITMAPHEADER*)memblock)->biBitCount;
+	    	unsigned int compression = ((BITMAPHEADER*)memblock)->biCompression;
 
 	    	if ((planes == 1) && (bits == 24) && (compression == 0)) {
-    			Depth = 3;
-    	    	Width = TO_UINT(memblock, 18);
-    	    	Height = TO_UINT(memblock, 22);
-    			Data = new unsigned char[Width * Height * Depth];
-    	    	unsigned int start = TO_UINT(memblock, 10);
-    	    	unsigned int step = (Width + (4 - (Width * 3) % 4) % 4) * Depth;
-    	    	cout << " start=" << start << " w=" << Width << " h=" << Height << std::endl;
-    	    	for (unsigned int y = 0; y < Height; ++y) {
-	    			memcpy(Cell(0, y), memblock + start + y * step, Width * Depth);
-	    		}
+    	    	Width = ((BITMAPHEADER*)memblock)->biWidth;
+    	    	int height = ((BITMAPHEADER*)memblock)->biHeight;
+    	    	Height = height > 0 ? height : -height;
+    	    	cout << "w=" << Width << " h=" << Height << std::endl;
+    			Data = new TColor[Width * Height];
+    	    	unsigned int start = ((BITMAPHEADER*)memblock)->bfOffBits;
+    	    	unsigned int padSize = (4 - (Width * 3) % 4) % 4;
+    	    	if (padSize > 0) {
+    	    		unsigned int step = (Width + padSize) * sizeof(TColor);
+    	    		for (unsigned int y = 0; y < Height; ++y) {
+    	    			memcpy(Cell(0, y), memblock + start + y * step, Width * 3);
+    	    		}
+    	    	} else {
+    	    		memcpy(Data, memblock + start, Width * Height * 3);
+    	    	}
 	    	} else {
 		    	cout << " Not supported: planes=" << planes << " bits=" << bits << " compression=" << compression << std::endl;
 	    	}
@@ -55,66 +102,41 @@ TRGBImage::TRGBImage(const char* bmpfile) {
 }
 
 void TRGBImage::SaveBMP(const char* fileName) {
-    unsigned char file[14] = {
-        'B','M', // magic
-        0,0,0,0, // size in bytes
-        0,0, // app data
-        0,0, // app data
-        40+14,0,0,0 // start of data offset
-    };
 
-    unsigned char info[40] = {
-        40,0,0,0, // info hd size
-        0,0,0,0, // width
-        0,0,0,0, // heigth
-        1,0, // number color planes
-        24,0, // bits per pixel
-        0,0,0,0, // compression is none
-        0,0,0,0, // image bits size
-        0x13,0x0B,0,0, // horz resoluition in pixel / m
-        0x13,0x0B,0,0, // vert resolutions (0x03C3 = 96 dpi, 0x0B13 = 72 dpi)
-        0,0,0,0, // #colors in pallete
-        0,0,0,0, // #important colors
-    };
+    unsigned int padSize  = (4 - (Width * 3) % 4) % 4;
+    unsigned int sizeData = Width *  Height * 3 + Height * padSize;
+    unsigned int sizeAll  = sizeData + sizeof(BITMAPHEADER);
 
-    int padSize  = (4 - (Width * 3) % 4) % 4;
-    int sizeData = Width *  Height * 3 + Height * padSize;
-    int sizeAll  = sizeData + sizeof(file) + sizeof(info);
-
-    file[ 2] = (unsigned char)(sizeAll);
-    file[ 3] = (unsigned char)(sizeAll >> 8);
-    file[ 4] = (unsigned char)(sizeAll >> 16);
-    file[ 5] = (unsigned char)(sizeAll >> 24);
-
-    info[ 4] = (unsigned char)(Width);
-    info[ 5] = (unsigned char)(Width >> 8);
-    info[ 6] = (unsigned char)(Width >> 16);
-    info[ 7] = (unsigned char)(Width >> 24);
-
-    info[ 8] = (unsigned char)(Height);
-    info[ 9] = (unsigned char)(Height >> 8);
-    info[10] = (unsigned char)(Height >> 16);
-    info[11] = (unsigned char)(Height >> 24);
-
-    info[20] = (unsigned char)(sizeData);
-    info[21] = (unsigned char)(sizeData >> 8);
-    info[22] = (unsigned char)(sizeData >> 16);
-    info[23] = (unsigned char)(sizeData >> 24);
+    BITMAPHEADER header;
+    header.bfType          = BF_TYPE;
+    header.bfSize          = sizeAll;
+    header.bfReserved1     = 0;
+    header.bfReserved2     = 0;
+    header.bfOffBits       = sizeof(BITMAPHEADER);
+    header.biSize          = 40;
+    header.biWidth         = Width;
+    header.biHeight        = Height;
+    header.biPlanes        = 1;
+    header.biBitCount      = 24;
+    header.biCompression   = 0;
+    header.biSizeImage     = sizeData;
+    header.biXPelsPerMeter = 0xB13; //(0x03C3 = 96 dpi, 0x0B13 = 72 dpi)
+    header.biYPelsPerMeter = 0xB13;
+    header.biClrUsed       = 0;
+    header.biClrImportant  = 0;
 
     ofstream stream;
     stream.open (fileName, ios::out | ios::binary);
+    stream.write((char*)&header, sizeof(BITMAPHEADER));
 
-    stream.write( (char*)file, sizeof(file) );
-
-
-    stream.write( (char*)info, sizeof(info) );
-
-    unsigned char pad[3] = {0,0,0};
-
-    for ( int y=0; y< Height; y++ )
-    {
-        stream.write( (char*)Cell(0, y), Depth * Width );
-        stream.write( (char*)pad, padSize );
+    if (padSize > 0) {
+    	unsigned char pad[3] = {0,0,0};
+    	for ( int y=0; y< Height; y++ ){
+    		stream.write( (char*)Cell(0, y), 3 * Width );
+    		stream.write( (char*)pad, padSize );
+    	}
+    } else {
+    	stream.write((char*)Data, Width * Height * 3);
     }
 
     stream.close();

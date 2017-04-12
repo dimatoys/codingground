@@ -31,12 +31,17 @@ struct TDistance {
 	}
 };
 
+struct TVector2D {
+	double X;
+	double Y;
+};
+
 class TProduction {
 	std::vector<TDistance> Matrix;
 public:
 	void SetR(double r);
 
-	void CountProduction(TImage<unsigned char> src, TImage<double> dst);
+	void CountProduction(TImage<TColor>& src, TImage<TVector2D>& dst);
 };
 
 

@@ -17,27 +17,24 @@ protected:
 public:
 	unsigned int Width;
 	unsigned int Height;
-	unsigned int Depth;
 
 	TImage() {
 		Data = (T*)0;
 	}
 
 	TImage(unsigned int width,
-		   unsigned int height,
-		   unsigned int depth) {
+		   unsigned int height) {
 		Width = width;
 		Height = height;
-		Depth = depth;
-		Data = new T[Width * Height * Depth];
+		Data = new T[Width * Height];
 	}
 
 	T* Cell(int x, int y) {
-		return Data + (y * Width + x) * Depth;
+		return Data + y * Width + x;
 	}
 
 	void DrawPixel(int x, int y, const T* color) {
-		memcpy(Cell(x, y), color, Depth);
+		memcpy(Cell(x, y), color, sizeof(T));
 	}
 
 	void DrawRect(int startx, int starty, int width, int height, const T* color) {
@@ -56,6 +53,8 @@ public:
 		}
 	}
 };
+
+typedef unsigned char TColor[3];
 
 void dumpBin(void* ptr, int size);
 
