@@ -6,6 +6,8 @@
 class TRGBImage : public TImage<TColor> {
 public:
 
+	TRGBImage() {}
+
 	TRGBImage(int width, int height) :
 		TImage(width, height) {}
 

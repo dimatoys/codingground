@@ -24,9 +24,22 @@ public:
 
 	TImage(unsigned int width,
 		   unsigned int height) {
+
+		Data = (T*)0;
+		Allocate(width, height);
+	}
+
+	void Allocate(unsigned int width,
+			      unsigned int height) {
+		if (Data != (T*)0) {
+			if ((Width == width) && (Height == height)) {
+				return;
+			}
+			delete Data;
+		}
+		Data = new T[width * height];
 		Width = width;
 		Height = height;
-		Data = new T[Width * Height];
 	}
 
 	T* Cell(int x, int y) {

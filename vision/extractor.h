@@ -42,15 +42,35 @@ struct TVector2D {
 typedef TVector2D TGradientColor[3];
 
 class TProduction {
-	const static int SmoothingMatixSize = 10;
+	const static int SmoothingMatrixSize = 10;
 
-	double SmoothingMatrix[SmoothingMatixSize][SmoothingMatixSize];
+	double SmoothingMatrix[SmoothingMatrixSize][SmoothingMatrixSize];
+	double ProductionMatrix[SmoothingMatrixSize - 2][SmoothingMatrixSize];
+
 public:
 	void CountSmoothingMatrix(double s);
+	void CountProductionMatrix(double s);
 	void Smoothing(TImage<TColor>& src, TImage<TDColor>& dst, int k);
 	void ToRGB(TImage<TDColor>& img, TRGBImage& rgb);
 
-	void CountProduction(TImage<TColor>& src, TImage<TGradientColor>& dst);
+	void CountProduction(TImage<TDColor>& src, TImage<TGradientColor>& dst);
+	void CountSmoothProduction(TImage<TColor>& src, TImage<TGradientColor>& dst, int k);
+	void CountSmoothProductionModule(TImage<TColor>& src, TImage<TDColor>& dst, int k);
+	void CountMod(TImage<TGradientColor>& src, TImage<TDColor>& dst);
+
+	double CountDiff(TGradientColor& p1, TGradientColor& p2);
+
+	double DumpDiffStat(TImage<TGradientColor>& grad, int k);
+
+	void FindUniqs(TImage<TColor>& img, TImage<TDColor>& grad, unsigned int area);
+
+	double CountDistinction(unsigned int x, unsigned int y, int prodShift,
+			                TImage<TColor>& img, TImage<TDColor>& grad,
+							unsigned int area);
+
+	double CountDiff(TColor& color1, TDColor& grad1,
+			         TColor& color2, TDColor& grad2,
+	                 double prodWeight);
 };
 
 
